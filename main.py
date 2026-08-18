@@ -1,109 +1,3 @@
-# import os
-# from src.config import Config
-# from src.graph_client import GraphClient
-# from src.backend_client import BackendClient
-# from src.regex_engine import RegexEngine
-# from src.body_classifier import BodyClassifier
-
-# def main():
-#     print("🚀 Starting Data Ingestion Engine...")
-    
-#     backend = BackendClient()
-#     graph = GraphClient()
-    
-#     # 1. Fetch Backend Truth
-#     print("📦 Fetching existing file paths from backend...")
-#     processed_paths = backend.get_processed_paths()
-#     print(f"✅ Found {len(processed_paths)} existing records.")
-    
-#     # 2. Load State (Delta Token)
-#     delta_link = None
-#     if os.path.exists(Config.DELTA_TOKEN_FILE):
-#         with open(Config.DELTA_TOKEN_FILE, 'r') as f:
-#             delta_link = f.read().strip()
-            
-#     # 3. Query Microsoft Graph
-#     print("🔍 Fetching delta changes from OneDrive...")
-#     items, new_delta_link = graph.get_delta_changes(delta_link)
-#     print(f"📥 Received {len(items)} items from Delta Query.")
-    
-#     processed_count = 0
-    
-#     # 4. Filter & Process Items
-#     for item in items:
-#         # Ignore folders or files deleted/moved out of scope
-#         if 'file' not in item or '@removed' in item:
-#             continue  
-            
-#         filename = item.get('name')
-#         file_id = item.get('id')
-#         download_url = item.get('@microsoft.graph.downloadUrl')
-#         parent_path = item.get('parentReference', {}).get('path', '')
-        
-#         # Construct the absolute path
-#         absolute_cloud_path = f"{parent_path}/{filename}"
-#         created_date = item.get('lastModifiedDateTime', item.get('createdDateTime'))
-        
-#         # O(1) Deduplication Check against the Node.js backend list
-#         if absolute_cloud_path in processed_paths:
-#             continue
-            
-#         print(f"📄 Processing new file: {filename}")
-        
-#         # Download and Extract
-#         temp_path = graph.download_file(download_url, file_id, filename)
-#         if not temp_path:
-#             continue
-            
-#         raw_text = RegexEngine.extract_text(temp_path)
-#         os.remove(temp_path)
-        
-#         if not raw_text:
-#             continue
-            
-#         # 1. Parse Document Data completely from text
-#         doc_metadata = RegexEngine.parse_document_text(raw_text)
-        
-#         # 2. Determine Institute
-#         institute_name = RegexEngine.extract_institute_from_path(parent_path)
-        
-#         # 3. Normalize ID
-#         normalized_id = RegexEngine.normalize_patient_id(doc_metadata["patientID"], institute_name)
-        
-#         # 4. Classify Body Part
-#         body_part = BodyClassifier.get_body_part(doc_metadata["description"], raw_text)
-        
-#         # Construct Payload
-#         payload = {
-#             "filePath": absolute_cloud_path,
-#             "fileCreatedDate": created_date,
-#             "instituteName": institute_name,
-#             "patientID": normalized_id,
-#             "patientName": doc_metadata["patientName"],
-#             "age": doc_metadata["age"],
-#             "gender": doc_metadata["gender"],
-#             "description": doc_metadata["description"],
-#             "bodyPart": body_part,
-#             "reportStatus": "REPORT_RECEIVED"
-#         }
-#         # Dispatch to Backend
-#         if backend.post_patient_report(payload):
-#             processed_count += 1
-#             # Add to set locally to prevent duplicate POSTs in the same run
-#             processed_paths.add(absolute_cloud_path) 
-            
-#     # 5. Save State for Next Execution
-#     if new_delta_link:
-#         with open(Config.DELTA_TOKEN_FILE, 'w') as f:
-#             f.write(new_delta_link)
-#         print("💾 Saved new Delta Token.")
-        
-#     print(f"🎉 Ingestion Complete. Processed {processed_count} new reports.")
-
-# if __name__ == "__main__":
-#     main()
-
-
 import os
 import traceback
 from src.config import Config
@@ -205,6 +99,7 @@ def main():
                 "fileCreatedDate": created_date,
                 "instituteName": institute_name,
                 "patientID": normalized_id,
+                "UHID": doc_metadata.get("uhid", "UNKNOWN"), # Captures UHID
                 "patientName": doc_metadata["patientName"],
                 "age": doc_metadata["age"],
                 "gender": doc_metadata["gender"],
