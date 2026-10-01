@@ -1,0 +1,27 @@
+# Environments
+venv/
+.venv/
+env/
+.env_venv/
+
+# Secrets and Configuration (CRITICAL)
+.env
+.delta_token
+
+# Python Cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# IDE and OS Files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.swp
+
+# Logs and Temp Files
+*.log
+tmp/
+temp/
