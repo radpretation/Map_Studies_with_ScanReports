@@ -133,7 +133,7 @@ class RegexEngine:
         metadata = {
             "patientName": "UNKNOWN",
             "patientID": "UNKNOWN",
-            "uhid": "UNKNOWN",
+            "UHID": "UNKNOWN",
             "age": "UNKNOWN",
             "gender": "UNKNOWN",
             "description": "UNKNOWN",
@@ -151,7 +151,7 @@ class RegexEngine:
         # 2. UHID Extraction
         uhid_match = re.search(r'\bUHID\b\s*[:-]?\s*([^\n]+?)' + lookahead, clean_text, re.IGNORECASE)
         if uhid_match:
-            metadata["uhid"] = uhid_match.group(1).strip()
+            metadata["UHID"] = uhid_match.group(1).strip()
 
         # 3. Patient ID Extraction
         id_match = re.search(r'(?:Patient\s*ID|ID\s*NO|\bID\b)\s*[:-]?\s*([^\n]+?)' + lookahead, clean_text, re.IGNORECASE)
